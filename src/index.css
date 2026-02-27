@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Ocultar scrollbar pero mantener funcionalidad */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+/* Mejoras táctiles para móvil */
+@media (max-width: 640px) {
+  button, 
+  [role="button"],
+  input,
+  .task-item {
+    min-height: 44px;  /* Tamaño mínimo táctil */
+  }
+  
+  .task-item {
+    touch-action: pan-y;  /* Mejorar scroll vertical */
+  }
+}

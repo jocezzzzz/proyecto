@@ -6,34 +6,39 @@ export default function TaskForm({ onTaskAdded, userId }) {
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!title.trim()) return
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  if (!title.trim()) return
 
-    setLoading(true)
-    try {
-      const { error } = await supabase
-        .from('tasks')
-        .insert([
-          {
-            title: title.trim(),
-            description: description.trim() || null,
-            user_id: userId,
-            completed: false
-          }
-        ])
+  console.log('Intentando guardar:', { title, description, userId }) // <-- AGREGA ESTO
 
-      if (error) throw error
+  setLoading(true)
+  try {
+    const { data, error } = await supabase // <-- CAMBIA A data también
+      .from('tasks')
+      .insert([
+        {
+          title: title.trim(),
+          description: description.trim() || null,
+          user_id: userId,
+          completed: false
+        }
+      ])
+      .select() // <-- AGREGA .select() para ver qué regresa
 
-      setTitle('')
-      setDescription('')
-      onTaskAdded()
-    } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setLoading(false)
-    }
+    console.log('Respuesta:', { data, error }) // <-- Y ESTO
+
+    if (error) throw error
+
+    setTitle('')
+    setDescription('')
+    onTaskAdded()
+  } catch (error) {
+    console.error('Error detallado:', error)
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">

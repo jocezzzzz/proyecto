@@ -11,8 +11,14 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
 
   useEffect(() => {
+    // Detectar preferencia del sistema para modo oscuro
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    setDarkMode(isDark)
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       if (session) fetchTasks()
@@ -70,9 +76,9 @@ function App() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="bg-white p-8 rounded-2xl shadow-lg">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando TaskFlow...</p>
+        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg mx-4">
+          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-4 border-indigo-500 border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-gray-600 text-sm sm:text-base">Cargando TaskFlow...</p>
         </div>
       </div>
     )
@@ -83,66 +89,122 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className={`min-h-screen bg-gray-50 ${darkMode ? 'dark' : ''}`}>
+      {/* Navbar mejorado para móvil */}
       <nav className="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center space-x-3">
-              <span className="text-2xl">✅</span>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">TaskFlow</h1>
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            {/* Logo y título */}
+            <div className="flex items-center space-x-2">
+              <span className="text-xl sm:text-2xl">✅</span>
+              <h1 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white truncate max-w-[120px] sm:max-w-none">
+                TaskFlow
+              </h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600 dark:text-gray-300">{session.user.email}</span>
+
+            {/* Versión móvil: botón de menú */}
+            <div className="flex items-center space-x-2 sm:hidden">
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700"
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700"
+              >
+                <span className="text-xl">☰</span>
+              </button>
+            </div>
+
+            {/* Versión desktop */}
+            <div className="hidden sm:flex items-center space-x-4">
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700"
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+              <span className="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[200px]">
+                {session.user.email}
+              </span>
               <button
                 onClick={() => supabase.auth.signOut()}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors shadow-sm"
+                className="bg-red-500 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-red-600 transition-colors shadow-sm"
               >
                 Salir
               </button>
             </div>
           </div>
+
+          {/* Menú móvil desplegable */}
+          {showMobileMenu && (
+            <div className="sm:hidden py-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col space-y-3">
+                <span className="text-sm text-gray-600 dark:text-gray-300 break-all">
+                  {session.user.email}
+                </span>
+                <button
+                  onClick={() => {
+                    supabase.auth.signOut()
+                    setShowMobileMenu(false)
+                  }}
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 w-full"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </nav>
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Stats tasks={tasks} />
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+        {/* Stats - responsive grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+          <Stats tasks={tasks} />
+        </div>
         
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="w-full sm:w-64">
+        {/* Búsqueda y filtros - stack en móvil */}
+        <div className="mt-4 sm:mt-6 lg:mt-8 space-y-3 sm:space-y-4">
+          <div className="w-full">
             <input
               type="text"
               placeholder="Buscar tareas..."
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
             />
           </div>
-          <div className="flex gap-2">
+          
+          {/* Filtros scrollables en móvil */}
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors flex-1 sm:flex-none ${
                 filter === 'all' 
                   ? 'bg-indigo-600 text-white' 
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
               }`}
             >
               Todas
             </button>
             <button
               onClick={() => setFilter('pending')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors flex-1 sm:flex-none ${
                 filter === 'pending' 
                   ? 'bg-yellow-500 text-white' 
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
               }`}
             >
               Pendientes
             </button>
             <button
               onClick={() => setFilter('completed')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors flex-1 sm:flex-none ${
                 filter === 'completed' 
                   ? 'bg-green-600 text-white' 
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
               }`}
             >
               Completadas
@@ -150,11 +212,13 @@ function App() {
           </div>
         </div>
 
-        <div className="mt-8">
+        {/* Formulario de tareas */}
+        <div className="mt-4 sm:mt-6">
           <TaskForm onTaskAdded={fetchTasks} userId={session.user.id} />
         </div>
 
-        <div className="mt-8">
+        {/* Lista de tareas */}
+        <div className="mt-4 sm:mt-6">
           <TaskList 
             tasks={filteredTasks} 
             loading={false}
