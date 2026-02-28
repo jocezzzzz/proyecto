@@ -39,18 +39,24 @@ export default function Auth() {
   }
 
   const handleGoogleLogin = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
-      })
-      if (error) throw error
-    } catch (error) {
-      setMessage(`❌ ${error.message}`)
-    }
+  try {
+    // Detectar si estamos en producción o desarrollo
+    const isProduction = window.location.hostname !== 'localhost'
+    const redirectUrl = isProduction 
+      ? 'https://taskflow-beryl-pi.vercel.app'  // Tu URL de Vercel
+      : window.location.origin
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl
+      }
+    })
+    if (error) throw error
+  } catch (error) {
+    setMessage(`❌ ${error.message}`)
   }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
