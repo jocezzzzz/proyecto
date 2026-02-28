@@ -1,62 +1,58 @@
-# TaskFlow ✅
+📋 TaskFlow - Gestión de Tareas en la Nube
 
-![TaskFlow Demo](URL_DE_TU_CAPTURA)
+TaskFlow es una aplicación web moderna para la gestión de tareas (to-do list) con sincronización en tiempo real, autenticación de usuarios y despliegue en la nube. Desarrollada como proyecto universitario de desarrollo web full-stack.
 
-Aplicación web de gestión de tareas con sincronización en tiempo real, desarrollada como proyecto universitario.
+🚀 Demo
+URL: https://taskflow-beryl-pi.vercel.app
 
-## 🚀 Demo
-[https://taskflow.vercel.app](URL_DE_TU_DEPLOY)
+✨ Características Principales
+🔐 Autenticación
+Registro e inicio de sesión con email/contraseña
 
-## ✨ Características
+Inicio de sesión con Google (OAuth)
 
-### Autenticación
-- Registro e inicio de sesión con email/contraseña
-- Login con Google
-- Protección de rutas (solo usuarios autenticados)
+Cierre de sesión seguro
 
-### Gestión de Tareas
-- ✅ Crear tareas con título y descripción
-- ✅ Editar tareas existentes
-- ✅ Eliminar tareas
-- ✅ Marcar como completadas/pendientes
-- ✅ Filtros por estado (todas, pendientes, completadas)
-- ✅ Búsqueda en tiempo real
+Protección de rutas (solo usuarios autenticados)
 
-### Extras implementados
-- 📊 Dashboard con estadísticas de productividad
-- 🔥 Sistema de rachas (streak)
-- 🌓 Modo oscuro/claro automático
-- ⚡ Sincronización en tiempo real
-- 📱 Diseño 100% responsive
+📝 Gestión de Tareas
+Crear tareas con título y descripción opcional
 
-## 🛠️ Tecnologías Utilizadas
+Editar tareas existentes
 
-- **Frontend**: React 18 + Vite
-- **Estilos**: Tailwind CSS + Heroicons
-- **Backend**: Supabase (PostgreSQL, Auth, Realtime)
-- **Autenticación**: Supabase Auth (Email + Google OAuth)
-- **Hosting**: Vercel
-- **Versionado**: Git + GitHub
+Eliminar tareas con confirmación
 
-## 📸 Capturas de Pantalla
+Marcar como completadas/pendientes
 
-### Desktop
-![Desktop](URL_CAPTURA_DESKTOP)
+Visualizar lista separada por estado
 
-### Mobile
-![Mobile](URL_CAPTURA_MOBILE)
+🔄 Sincronización en Tiempo Real
+Los cambios se reflejan instantáneamente en todos los dispositivos
 
-### Dashboard
-![Dashboard](URL_CAPTURA_DASHBOARD)
+Actualización automática sin recargar la página
 
-## 🗄️ Estructura de la Base de Datos
+Datos persistentes en la nube
 
-```sql
-CREATE TABLE tasks (
-  id BIGSERIAL PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id),
-  title TEXT NOT NULL,
-  description TEXT,
-  completed BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+🎨 Funcionalidades Extras
+📊 Dashboard con estadísticas: Totales, completadas, pendientes y racha actual
+
+🔥 Sistema de rachas: Incentiva la productividad diaria
+
+🌓 Modo oscuro/claro: Se adapta a tu preferencia
+
+🔍 Búsqueda en tiempo real: Filtra tareas mientras escribes
+
+🏷️ Filtros por estado: Todas, pendientes y completadas
+
+📱 Diseño responsive: Optimizado para móvil, tablet y desktop
+
+🛠️ Tecnologías Utilizadas
+Tecnología	Versión	Propósito
+React	18.2.0	Framework frontend
+Vite	5.0.0	Build tool y dev server
+Tailwind CSS	3.4.1	Estilos y diseño responsive
+Supabase	2.39.0	Backend, autenticación, BD, tiempo real
+Heroicons	2.0.18	Iconografía
+Google Cloud Console	-	Configuración OAuth
+Vercel	-	Hosting y despliegue
+Git/GitHub	-	Control de versiones
