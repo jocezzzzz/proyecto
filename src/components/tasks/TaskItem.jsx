@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { PencilIcon, TrashIcon, HeartIcon as HeartOutline } from '@heroicons/react/24/outline'
+import { TrashIcon, HeartIcon as HeartOutline } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
-export default function TaskItem({ task, onTaskUpdated, favorites = [], toggleFavorite }) {
+export default function TaskItem({ task, onTaskUpdated, favorites = [], toggleFavorite, categories = [] }) {
   const [loading, setLoading] = useState(false)
   const isFavorite = favorites.includes(task.id)
+  
+  const category = categories.find(c => c.id === task.category_id)
 
   const toggleComplete = async () => {
     setLoading(true)
@@ -27,15 +29,10 @@ export default function TaskItem({ task, onTaskUpdated, favorites = [], toggleFa
   }
 
   const deleteTask = async () => {
-    if (!confirm('¿Eliminar esta tarea?')) return
-    
+    if (!confirm('¿Eliminar?')) return
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', task.id)
-
+      const { error } = await supabase.from('tasks').delete().eq('id', task.id)
       if (error) throw error
       onTaskUpdated()
     } catch (error) {
@@ -50,23 +47,20 @@ export default function TaskItem({ task, onTaskUpdated, favorites = [], toggleFa
     const today = new Date()
     const due = new Date(task.due_date)
     const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24))
-    
     if (diffDays < 0) return 'vencida'
     if (diffDays === 0) return 'hoy'
-    if (diffDays <= 2) return 'proxima'
     return 'normal'
   }
 
-  const dueDateStatus = getDueDateStatus()
-  const dueDateClass = {
-    vencida: 'border-l-4 border-red-500',
-    hoy: 'border-l-4 border-orange-500',
-    proxima: 'border-l-4 border-yellow-500',
-    normal: ''
-  }[dueDateStatus] || ''
+  const status = getDueDateStatus()
+  const statusColor = {
+    vencida: 'text-red-400',
+    hoy: 'text-orange-400',
+    normal: 'text-gray-400'
+  }[status] || 'text-gray-400'
 
   return (
-    <div className={`bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all ${dueDateClass}`}>
+    <div className={`group border-b border-gray-100 py-3 px-2 hover:bg-gray-50/50 transition-colors ${task.completed ? 'opacity-50' : ''}`}>
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3 flex-1">
           <input
@@ -74,55 +68,45 @@ export default function TaskItem({ task, onTaskUpdated, favorites = [], toggleFa
             checked={task.completed}
             onChange={toggleComplete}
             disabled={loading}
-            className="mt-1 h-5 w-5 text-indigo-600 rounded cursor-pointer"
+            className="mt-1 h-4 w-4 rounded border-gray-300 text-gray-600 focus:ring-gray-300"
           />
           
           <div className="flex-1">
-            <h4 className={`text-base font-medium ${task.completed ? 'line-through text-gray-400' : 'text-gray-900'}`}>
-              {task.title}
-            </h4>
+            <div className="flex items-center gap-2">
+              {category && (
+                <span 
+                  className="w-2 h-2 rounded-full" 
+                  style={{ backgroundColor: category.color }}
+                  title={category.name}
+                />
+              )}
+              <h4 className={`text-sm ${task.completed ? 'line-through text-gray-300' : 'text-gray-700'}`}>
+                {task.title}
+              </h4>
+            </div>
             
             {task.description && (
-              <p className="text-sm text-gray-600 mt-1">
-                {task.description}
-              </p>
+              <p className="text-xs text-gray-400 mt-0.5 ml-4">{task.description}</p>
             )}
 
-            <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-500">
-              {task.due_date && (
-                <span className={`flex items-center gap-1 ${
-                  dueDateStatus === 'vencida' ? 'text-red-600 font-medium' :
-                  dueDateStatus === 'hoy' ? 'text-orange-600 font-medium' :
-                  dueDateStatus === 'proxima' ? 'text-yellow-600 font-medium' :
-                  'text-gray-500'
-                }`}>
-                  ⏰ {format(new Date(task.due_date), 'dd/MM/yyyy', { locale: es })}
-                  {dueDateStatus === 'vencida' && ' (Vencida)'}
-                  {dueDateStatus === 'hoy' && ' (Hoy)'}
-                  {dueDateStatus === 'proxima' && ' (Pronto)'}
-                </span>
-              )}
-            </div>
+            {task.due_date && (
+              <p className={`text-xs mt-1 ml-4 ${statusColor}`}>
+                {format(new Date(task.due_date), 'dd MMM', { locale: es })}
+                {status === 'vencida' && ' • vencida'}
+                {status === 'hoy' && ' • hoy'}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="flex space-x-2 ml-4">
+        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {toggleFavorite && (
-            <button
-              onClick={() => toggleFavorite(task.id)}
-              className="p-1 text-gray-400 hover:text-red-500"
-            >
-              {isFavorite ? 
-                <HeartSolid className="h-5 w-5 text-red-500" /> : 
-                <HeartOutline className="h-5 w-5" />
-              }
+            <button onClick={() => toggleFavorite(task.id)} className="p-1 text-gray-300 hover:text-gray-500">
+              {isFavorite ? <HeartSolid className="h-4 w-4 text-gray-500" /> : <HeartOutline className="h-4 w-4" />}
             </button>
           )}
-          <button
-            onClick={deleteTask}
-            className="p-1 text-gray-400 hover:text-red-500"
-          >
-            <TrashIcon className="h-5 w-5" />
+          <button onClick={deleteTask} className="p-1 text-gray-300 hover:text-gray-500">
+            <TrashIcon className="h-4 w-4" />
           </button>
         </div>
       </div>

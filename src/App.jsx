@@ -4,37 +4,73 @@ import Auth from './components/auth/Auth'
 import Stats from './components/dashboard/Stats'
 import TaskList from './components/tasks/TaskList'
 import TaskForm from './components/tasks/TaskForm'
+import TaskCalendar from './components/calendar/TaskCalendar'
+import CategoryManager from './components/categories/CategoryManager'
 import 'react-datepicker/dist/react-datepicker.css'
 
 function App() {
   const [session, setSession] = useState(null)
   const [tasks, setTasks] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [sortBy, setSortBy] = useState('fecha')
+  const [viewMode, setViewMode] = useState('lista') // 'lista' o 'calendario'
   const [favorites, setFavorites] = useState([])
   const [frase, setFrase] = useState('')
+  const [showCategories, setShowCategories] = useState(false)
+
+  // Cargar categorías del usuario
+  useEffect(() => {
+    const loadCategories = async () => {
+      if (!session?.user?.id) return
+      
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('name')
+
+      if (!error) setCategories(data || [])
+    }
+    loadCategories()
+  }, [session])
+
+  // Si no hay categorías, crear algunas por defecto
+  useEffect(() => {
+    const createDefaultCategories = async () => {
+      if (!session?.user?.id || categories.length > 0) return
+
+      const defaultCategories = [
+        { name: 'Trabajo', color: '#3B82F6', user_id: session.user.id },
+        { name: 'Personal', color: '#10B981', user_id: session.user.id },
+        { name: 'Estudio', color: '#8B5CF6', user_id: session.user.id },
+        { name: 'Hogar', color: '#F59E0B', user_id: session.user.id }
+      ]
+
+      const { data } = await supabase
+        .from('categories')
+        .insert(defaultCategories)
+        .select()
+
+      if (data) setCategories(data)
+    }
+    createDefaultCategories()
+  }, [session, categories])
 
   useEffect(() => {
     async function initializeApp() {
       const { data: { session } } = await supabase.auth.getSession()
-      console.log('Sesión obtenida:', session)
       setSession(session)
-      
-      if (session?.user) {
-        await fetchTasksWithSession(session)
-      }
+      if (session?.user) await fetchTasksWithSession(session)
       setLoading(false)
     }
 
     initializeApp()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('Cambio en auth:', _event, session)
       setSession(session)
-      
       if (session?.user) {
         await fetchTasksWithSession(session)
       } else {
@@ -46,16 +82,18 @@ function App() {
   }, [])
 
   const fetchTasksWithSession = async (session) => {
-    if (!session?.user?.id) {
-      console.log('No hay sesión válida')
-      return
-    }
-
+    if (!session?.user?.id) return
     try {
-      console.log('Cargando tareas para:', session.user.id)
       const { data, error } = await supabase
         .from('tasks')
-        .select('*')
+        .select(`
+          *,
+          categories (
+            id,
+            name,
+            color
+          )
+        `)
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
 
@@ -74,27 +112,24 @@ function App() {
   // Suscripción en tiempo real
   useEffect(() => {
     if (!session?.user?.id) return
-
     const subscription = supabase
       .channel('tasks_channel')
       .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'tasks', 
-          filter: `user_id=eq.${session.user.id}` 
-        },
+        { event: '*', schema: 'public', table: 'tasks', filter: `user_id=eq.${session.user.id}` },
         () => fetchTasks()
       )
       .subscribe()
-
     return () => subscription.unsubscribe()
   }, [session?.user?.id])
 
-  // Filtrado y ordenamiento
+  // Filtrado
   const filteredTasks = tasks.filter(task => {
     if (filter === 'pending' && task.completed) return false
     if (filter === 'completed' && !task.completed) return false
+    if (filter.startsWith('cat_')) {
+      const catId = parseInt(filter.replace('cat_', ''))
+      return task.category_id === catId
+    }
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       return task.title.toLowerCase().includes(term) || 
@@ -103,6 +138,7 @@ function App() {
     return true
   })
 
+  // Ordenamiento
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     if (sortBy === 'alfabetico') return a.title.localeCompare(b.title)
     if (sortBy === 'fecha_vencimiento') {
@@ -128,21 +164,21 @@ function App() {
 
   useEffect(() => {
     const frasesArr = [
-      '✨ ¡Cada tarea completada es un paso más!',
-      '💪 Tú puedes con todo',
-      '🎯 Enfoque y disciplina',
-      '🌟 Hoy será un gran día',
-      '⚡ La constancia es la clave',
+      'organiza con color',
+      'cada tarea en su lugar',
+      'colores que inspiran',
+      'tu vida en categorías',
+      'pinta tus tareas',
     ]
     setFrase(frasesArr[Math.floor(Math.random() * frasesArr.length)])
   }, [tasks.length])
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="bg-white p-6 rounded-2xl shadow-lg">
-          <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando TaskFlow...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-gray-600 mx-auto"></div>
+          <p className="mt-4 text-sm text-gray-400">cargando...</p>
         </div>
       </div>
     )
@@ -154,98 +190,142 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-lg sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl">✅</span>
-              <h1 className="text-xl font-bold text-gray-900">TaskFlow</h1>
+      {/* Header */}
+      <header className="border-b border-gray-200 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-600 text-xl">◉</span>
+                <h1 className="text-sm font-medium text-gray-700 tracking-wide">taskflow</h1>
+              </div>
+              <button
+                onClick={() => setShowCategories(!showCategories)}
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showCategories ? '← tareas' : 'categorías'}
+              </button>
             </div>
-            <div className="hidden sm:flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {session?.user?.email || 'Usuario'}
-              </span>
+            <div className="flex items-center space-x-3">
+              <span className="text-xs text-gray-400">{session.user.email}</span>
               <button
                 onClick={() => supabase.auth.signOut()}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600"
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
-                Salir
+                salir
               </button>
             </div>
           </div>
         </div>
-      </nav>
+      </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {frase && (
-          <div className="mb-4 text-center text-sm italic text-gray-600 bg-white p-3 rounded-lg shadow-sm">
-            {frase}
-          </div>
-        )}
-        
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <Stats tasks={tasks} />
-        </div>
-
-        <div className="flex flex-col sm:flex-row justify-between gap-3 mb-4">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                filter === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              Todas
-            </button>
-            <button
-              onClick={() => setFilter('pending')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                filter === 'pending' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              Pendientes
-            </button>
-            <button
-              onClick={() => setFilter('completed')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                filter === 'completed' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              Completadas
-            </button>
-          </div>
-
-          <input
-            type="text"
-            placeholder="🔍 Buscar tareas..."
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full sm:w-64 px-3 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500"
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        {showCategories ? (
+          <CategoryManager 
+            categories={categories}
+            setCategories={setCategories}
+            userId={session.user.id}
           />
-        </div>
+        ) : (
+          <>
+            {/* Frase */}
+            {frase && (
+              <div className="text-center mb-8">
+                <p className="text-xs text-gray-400 italic">{frase}</p>
+              </div>
+            )}
+            
+            {/* Stats */}
+            <div className="mb-8">
+              <Stats tasks={tasks} />
+            </div>
 
-        <div className="flex gap-2 mb-4">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-1.5 text-sm border rounded-lg"
-          >
-            <option value="fecha">📅 Fecha creación</option>
-            <option value="fecha_vencimiento">⏰ Fecha límite</option>
-            <option value="alfabetico">🔤 Alfabético</option>
-          </select>
-        </div>
+            {/* Barra de herramientas */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="flex gap-1 bg-white rounded-lg p-0.5 border border-gray-200">
+                <button
+                  onClick={() => setViewMode('lista')}
+                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                    viewMode === 'lista' ? 'bg-gray-800 text-white' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  lista
+                </button>
+                <button
+                  onClick={() => setViewMode('calendario')}
+                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                    viewMode === 'calendario' ? 'bg-gray-800 text-white' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  calendario
+                </button>
+              </div>
 
-        <div className="mb-6">
-          <TaskForm onTaskAdded={fetchTasks} userId={session?.user?.id} />
-        </div>
+              {viewMode === 'lista' && (
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                  <select
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    className="px-3 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  >
+                    <option value="all">todas</option>
+                    <option value="pending">pendientes</option>
+                    <option value="completed">completadas</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={`cat_${cat.id}`}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
 
-        <TaskList 
-          tasks={sortedTasks} 
-          loading={false}
-          onTaskUpdated={fetchTasks}
-          favorites={favorites}
-          toggleFavorite={toggleFavorite}
-        />
+                  <input
+                    type="text"
+                    placeholder="buscar..."
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="flex-1 sm:w-48 px-3 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  />
+                  
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  >
+                    <option value="fecha">fecha</option>
+                    <option value="fecha_vencimiento">límite</option>
+                    <option value="alfabetico">a-z</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Formulario */}
+            <div className="mb-8">
+              <TaskForm 
+                onTaskAdded={fetchTasks} 
+                userId={session.user.id}
+                categories={categories}
+              />
+            </div>
+
+            {/* Contenido: Lista o Calendario */}
+            {viewMode === 'lista' ? (
+              <TaskList 
+                tasks={sortedTasks} 
+                loading={false}
+                onTaskUpdated={fetchTasks}
+                favorites={favorites}
+                toggleFavorite={toggleFavorite}
+                categories={categories}
+              />
+            ) : (
+              <TaskCalendar 
+                tasks={tasks}
+                categories={categories}
+                onTaskUpdated={fetchTasks}
+              />
+            )}
+          </>
+        )}
       </main>
     </div>
   )
