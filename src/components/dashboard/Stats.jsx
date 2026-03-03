@@ -7,28 +7,24 @@ export default function Stats({ tasks }) {
   const streak = Math.floor(completedTasks / 2) + 1
 
   const stats = [
-    { label: 'TOTAL', value: totalTasks, icon: ClockIcon, color: 'blue' },
-    { label: 'COMP', value: completedTasks, icon: CheckCircleIcon, color: 'green' },
-    { label: 'PEND', value: pendingTasks, icon: ClockIcon, color: 'yellow' },
-    { label: 'RACHA', value: streak, icon: FireIcon, color: 'orange' }
+    { label: 'TOTAL', value: totalTasks, icon: ClockIcon },
+    { label: 'COMP', value: completedTasks, icon: CheckCircleIcon },
+    { label: 'PEND', value: pendingTasks, icon: ClockIcon },
+    { label: 'RACHA', value: streak, icon: FireIcon }
   ]
 
   return (
-    <div className="grid grid-cols-4 gap-1">
-      {stats.map((stat) => (
-        <div 
-          key={stat.label}
-          className="bg-white dark:bg-gray-800 rounded-lg p-1.5 shadow text-center"
-        >
-          <stat.icon className={`h-3.5 w-3.5 mx-auto text-${stat.color}-500 mb-0.5`} />
-          <div className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
-            {stat.label}
+    <div className="grid grid-cols-4 gap-2">
+      {stats.map((stat, i) => {
+        const Icon = stat.icon
+        return (
+          <div key={i} className="bg-white rounded-lg p-3 text-center shadow-sm">
+            <Icon className="h-5 w-5 mx-auto text-indigo-500 mb-1" />
+            <div className="text-xs text-gray-500">{stat.label}</div>
+            <div className="text-lg font-bold text-gray-900">{stat.value}</div>
           </div>
-          <div className="text-xs font-bold text-gray-900 dark:text-white">
-            {stat.value}
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

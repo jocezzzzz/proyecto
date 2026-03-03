@@ -1,26 +1,32 @@
 import { useState } from 'react'
 import TaskItem from './TaskItem'
 
-export default function TaskList({ tasks, loading, onTaskUpdated }) {
+export default function TaskList({ 
+  tasks, 
+  loading, 
+  onTaskUpdated,
+  favorites = [],
+  toggleFavorite
+}) {
   const [editingTask, setEditingTask] = useState(null)
 
   if (loading) {
     return (
       <div className="text-center py-12">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div>
-        <p className="mt-2 text-gray-500 dark:text-gray-400">Cargando tareas...</p>
+        <p className="mt-2 text-gray-500">Cargando tareas...</p>
       </div>
     )
   }
 
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+      <div className="text-center py-12 bg-white rounded-lg">
         <span className="text-6xl mb-4 block">📋</span>
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
           No hay tareas
         </h3>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-gray-500">
           ¡Comienza agregando una nueva tarea!
         </p>
       </div>
@@ -34,7 +40,7 @@ export default function TaskList({ tasks, loading, onTaskUpdated }) {
     <div className="space-y-6">
       {pendingTasks.length > 0 && (
         <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
             <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
             Pendientes ({pendingTasks.length})
           </h3>
@@ -46,6 +52,8 @@ export default function TaskList({ tasks, loading, onTaskUpdated }) {
                 onTaskUpdated={onTaskUpdated}
                 editingTask={editingTask}
                 setEditingTask={setEditingTask}
+                favorites={favorites}
+                toggleFavorite={toggleFavorite}
               />
             ))}
           </div>
@@ -54,7 +62,7 @@ export default function TaskList({ tasks, loading, onTaskUpdated }) {
 
       {completedTasks.length > 0 && (
         <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
             <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
             Completadas ({completedTasks.length})
           </h3>
@@ -66,6 +74,8 @@ export default function TaskList({ tasks, loading, onTaskUpdated }) {
                 onTaskUpdated={onTaskUpdated}
                 editingTask={editingTask}
                 setEditingTask={setEditingTask}
+                favorites={favorites}
+                toggleFavorite={toggleFavorite}
               />
             ))}
           </div>

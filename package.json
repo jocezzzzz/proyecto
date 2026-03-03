@@ -12,7 +12,10 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@supabase/supabase-js": "^2.98.0",
+    "date-fns": "^4.1.0",
     "react": "^19.2.0",
+    "react-calendar": "^6.0.0",
+    "react-datepicker": "^9.1.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
