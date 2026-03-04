@@ -42,14 +42,18 @@ export default function TaskForm({ onTaskAdded, userId, categories = [] }) {
   }
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 bg-white">
-      <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">nueva tarea</h3>
-      <form onSubmit={handleSubmit} className="space-y-3">
+    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-indigo-100">
+      <h3 className="text-xs font-medium text-indigo-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+        <span className="w-1 h-4 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></span>
+        nueva tarea
+      </h3>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+          className="w-full px-4 py-2 text-sm border border-indigo-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white/50"
           placeholder="título"
           required
         />
@@ -58,15 +62,15 @@ export default function TaskForm({ onTaskAdded, userId, categories = [] }) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
-          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+          className="w-full px-4 py-2 text-sm border border-indigo-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white/50"
           placeholder="descripción (opcional)"
         />
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <DatePicker
             selected={dueDate}
             onChange={(date) => setDueDate(date)}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+            className="w-full px-4 py-2 text-sm border border-indigo-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white/50"
             placeholderText="fecha límite"
             minDate={new Date()}
             dateFormat="dd/MM/yyyy"
@@ -76,7 +80,7 @@ export default function TaskForm({ onTaskAdded, userId, categories = [] }) {
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+            className="px-4 py-2 text-sm border border-indigo-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white/50"
           >
             <option value="">sin categoría</option>
             {categories.map(cat => (
@@ -90,7 +94,7 @@ export default function TaskForm({ onTaskAdded, userId, categories = [] }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2 bg-gray-800 text-white text-sm rounded-md hover:bg-gray-900 disabled:opacity-50 transition-colors"
+          className="w-full py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium rounded-xl hover:shadow-lg transition-all duration-200 disabled:opacity-50"
         >
           {loading ? '...' : 'crear tarea'}
         </button>

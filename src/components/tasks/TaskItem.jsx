@@ -54,13 +54,13 @@ export default function TaskItem({ task, onTaskUpdated, favorites = [], toggleFa
 
   const status = getDueDateStatus()
   const statusColor = {
-    vencida: 'text-red-400',
-    hoy: 'text-orange-400',
-    normal: 'text-gray-400'
-  }[status] || 'text-gray-400'
+    vencida: 'text-rose-500',
+    hoy: 'text-amber-500',
+    normal: 'text-indigo-400'
+  }[status] || 'text-indigo-400'
 
   return (
-    <div className={`group border-b border-gray-100 py-3 px-2 hover:bg-gray-50/50 transition-colors ${task.completed ? 'opacity-50' : ''}`}>
+    <div className={`group bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-indigo-100 hover:shadow-md transition-all mb-2 ${task.completed ? 'opacity-60' : ''}`}>
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3 flex-1">
           <input
@@ -68,19 +68,19 @@ export default function TaskItem({ task, onTaskUpdated, favorites = [], toggleFa
             checked={task.completed}
             onChange={toggleComplete}
             disabled={loading}
-            className="mt-1 h-4 w-4 rounded border-gray-300 text-gray-600 focus:ring-gray-300"
+            className="mt-1 h-4 w-4 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-200"
           />
           
           <div className="flex-1">
             <div className="flex items-center gap-2">
               {category && (
                 <span 
-                  className="w-2 h-2 rounded-full" 
+                  className="w-2 h-2 rounded-full shadow-sm" 
                   style={{ backgroundColor: category.color }}
                   title={category.name}
                 />
               )}
-              <h4 className={`text-sm ${task.completed ? 'line-through text-gray-300' : 'text-gray-700'}`}>
+              <h4 className={`text-sm ${task.completed ? 'line-through text-gray-400' : 'text-gray-700'}`}>
                 {task.title}
               </h4>
             </div>
@@ -101,11 +101,11 @@ export default function TaskItem({ task, onTaskUpdated, favorites = [], toggleFa
 
         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {toggleFavorite && (
-            <button onClick={() => toggleFavorite(task.id)} className="p-1 text-gray-300 hover:text-gray-500">
-              {isFavorite ? <HeartSolid className="h-4 w-4 text-gray-500" /> : <HeartOutline className="h-4 w-4" />}
+            <button onClick={() => toggleFavorite(task.id)} className="p-1 text-indigo-300 hover:text-rose-400 transition-colors">
+              {isFavorite ? <HeartSolid className="h-4 w-4 text-rose-400" /> : <HeartOutline className="h-4 w-4" />}
             </button>
           )}
-          <button onClick={deleteTask} className="p-1 text-gray-300 hover:text-gray-500">
+          <button onClick={deleteTask} className="p-1 text-indigo-300 hover:text-rose-400 transition-colors">
             <TrashIcon className="h-4 w-4" />
           </button>
         </div>

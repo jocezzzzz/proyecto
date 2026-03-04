@@ -41,7 +41,7 @@ export default function CategoryManager({ categories, setCategories, userId }) {
   }
 
   const deleteCategory = async (id) => {
-    if (!confirm('¿Eliminar categoría?')) return
+    if (!confirm('¿Eliminar categoría? Las tareas quedarán sin categoría.')) return
     
     const { error } = await supabase
       .from('categories')
@@ -56,6 +56,14 @@ export default function CategoryManager({ categories, setCategories, userId }) {
   return (
     <div className="max-w-2xl mx-auto">
       <h2 className="text-sm font-medium text-gray-700 mb-4">categorías</h2>
+
+      {/* Mensaje si no hay categorías */}
+      {categories.length === 0 && (
+        <div className="bg-gray-50 rounded-lg p-6 text-center mb-6">
+          <p className="text-xs text-gray-400">no tienes categorías</p>
+          <p className="text-xs text-gray-300 mt-1">crea una para organizar tus tareas</p>
+        </div>
+      )}
 
       {/* Crear nueva */}
       <div className="bg-white rounded-lg p-4 border border-gray-200 mb-6">

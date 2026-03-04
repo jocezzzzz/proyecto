@@ -6,6 +6,8 @@ import TaskList from './components/tasks/TaskList'
 import TaskForm from './components/tasks/TaskForm'
 import TaskCalendar from './components/calendar/TaskCalendar'
 import CategoryManager from './components/categories/CategoryManager'
+import PomodoroTimer from './components/Pomodoro/PomodoroTimer'
+import ProgressBar from './components/dashboard/ProgressBar'
 import 'react-datepicker/dist/react-datepicker.css'
 
 function App() {
@@ -16,12 +18,13 @@ function App() {
   const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('fecha')
-  const [viewMode, setViewMode] = useState('lista') // 'lista' o 'calendario'
+  const [viewMode, setViewMode] = useState('lista')
   const [favorites, setFavorites] = useState([])
   const [frase, setFrase] = useState('')
   const [showCategories, setShowCategories] = useState(false)
+  const [showPomodoro, setShowPomodoro] = useState(false)
 
-  // Cargar categorías del usuario
+  // Cargar categorías del usuario (sin crear por defecto)
   useEffect(() => {
     const loadCategories = async () => {
       if (!session?.user?.id) return
@@ -36,28 +39,6 @@ function App() {
     }
     loadCategories()
   }, [session])
-
-  // Si no hay categorías, crear algunas por defecto
-  useEffect(() => {
-    const createDefaultCategories = async () => {
-      if (!session?.user?.id || categories.length > 0) return
-
-      const defaultCategories = [
-        { name: 'Trabajo', color: '#3B82F6', user_id: session.user.id },
-        { name: 'Personal', color: '#10B981', user_id: session.user.id },
-        { name: 'Estudio', color: '#8B5CF6', user_id: session.user.id },
-        { name: 'Hogar', color: '#F59E0B', user_id: session.user.id }
-      ]
-
-      const { data } = await supabase
-        .from('categories')
-        .insert(defaultCategories)
-        .select()
-
-      if (data) setCategories(data)
-    }
-    createDefaultCategories()
-  }, [session, categories])
 
   useEffect(() => {
     async function initializeApp() {
@@ -169,16 +150,25 @@ function App() {
       'colores que inspiran',
       'tu vida en categorías',
       'pinta tus tareas',
+      '🍅 tiempo de enfoque',
+      'pomodoro + tareas = productividad',
+      'hoy será un gran día',
+      'pequeños pasos, grandes logros',
     ]
     setFrase(frasesArr[Math.floor(Math.random() * frasesArr.length)])
   }, [tasks.length])
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-gray-600 mx-auto"></div>
-          <p className="mt-4 text-sm text-gray-400">cargando...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600 mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-indigo-600 text-xs">◉</span>
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-indigo-400 animate-pulse">cargando...</p>
         </div>
       </div>
     )
@@ -189,28 +179,77 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      {/* Header con glassmorphism */}
+      <header className="sticky top-0 z-10 bg-white/70 backdrop-blur-md border-b border-indigo-100/50 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
+              {/* Logo con gradiente */}
               <div className="flex items-center space-x-2">
-                <span className="text-gray-600 text-xl">◉</span>
-                <h1 className="text-sm font-medium text-gray-700 tracking-wide">taskflow</h1>
+                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-md">
+                  <span className="text-white text-lg">◉</span>
+                </div>
+                <h1 className="text-sm font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  taskflow
+                </h1>
+              </div>
+
+              {/* Navegación con chips */}
+              <div className="flex items-center space-x-2 text-sm">
+                <button
+                  onClick={() => {
+                    setShowCategories(false)
+                    setShowPomodoro(false)
+                  }}
+                  className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
+                    !showCategories && !showPomodoro 
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
+                      : 'text-gray-500 hover:text-indigo-600 hover:bg-white/50'
+                  }`}
+                >
+                  tareas
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCategories(true)
+                    setShowPomodoro(false)
+                  }}
+                  className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
+                    showCategories 
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
+                      : 'text-gray-500 hover:text-indigo-600 hover:bg-white/50'
+                  }`}
+                >
+                  categorías
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPomodoro(!showPomodoro)
+                    setShowCategories(false)
+                  }}
+                  className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
+                    showPomodoro 
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
+                      : 'text-gray-500 hover:text-indigo-600 hover:bg-white/50'
+                  }`}
+                >
+                  🍅 pomodoro
+                </button>
+              </div>
+            </div>
+
+            {/* User menu */}
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 bg-white/50 px-3 py-1.5 rounded-full">
+                <span className="text-xs text-indigo-600 font-medium">{session.user.email}</span>
+                <div className="w-6 h-6 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full flex items-center justify-center text-white text-xs">
+                  {session.user.email[0].toUpperCase()}
+                </div>
               </div>
               <button
-                onClick={() => setShowCategories(!showCategories)}
-                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                {showCategories ? '← tareas' : 'categorías'}
-              </button>
-            </div>
-            <div className="flex items-center space-x-3">
-              <span className="text-xs text-gray-400">{session.user.email}</span>
-              <button
                 onClick={() => supabase.auth.signOut()}
-                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-xs text-gray-400 hover:text-indigo-600 transition-colors bg-white/50 px-3 py-1.5 rounded-full"
               >
                 salir
               </button>
@@ -226,76 +265,100 @@ function App() {
             setCategories={setCategories}
             userId={session.user.id}
           />
+        ) : showPomodoro ? (
+          <div className="max-w-md mx-auto">
+            <PomodoroTimer />
+          </div>
         ) : (
           <>
-            {/* Frase */}
+            {/* Frase con diseño */}
             {frase && (
               <div className="text-center mb-8">
-                <p className="text-xs text-gray-400 italic">{frase}</p>
+                <div className="inline-block bg-white/50 backdrop-blur-sm px-6 py-2 rounded-full shadow-sm">
+                  <p className="text-xs text-indigo-600 italic">{frase}</p>
+                </div>
               </div>
             )}
             
-            {/* Stats */}
-            <div className="mb-8">
+            {/* Stats y Barra de progreso */}
+            <div className="space-y-6 mb-8">
               <Stats tasks={tasks} />
+              <ProgressBar tasks={tasks} />
             </div>
 
-            {/* Barra de herramientas */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div className="flex gap-1 bg-white rounded-lg p-0.5 border border-gray-200">
-                <button
-                  onClick={() => setViewMode('lista')}
-                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                    viewMode === 'lista' ? 'bg-gray-800 text-white' : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  lista
-                </button>
-                <button
-                  onClick={() => setViewMode('calendario')}
-                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                    viewMode === 'calendario' ? 'bg-gray-800 text-white' : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  calendario
-                </button>
-              </div>
+            {/* Botón pomodoro con estilo */}
+            <div className="mb-4">
+              <button
+                onClick={() => setShowPomodoro(true)}
+                className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl text-sm font-medium hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <span>🍅</span>
+                <span>iniciar pomodoro</span>
+              </button>
+            </div>
 
-              {viewMode === 'lista' && (
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                  <select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="px-3 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+            {/* Barra de herramientas con diseño mejorado */}
+            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-sm mb-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex gap-1 bg-white rounded-lg p-0.5 shadow-sm">
+                  <button
+                    onClick={() => setViewMode('lista')}
+                    className={`px-3 py-1.5 text-xs rounded-md transition-all duration-200 ${
+                      viewMode === 'lista' 
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
+                        : 'text-gray-500 hover:text-indigo-600'
+                    }`}
                   >
-                    <option value="all">todas</option>
-                    <option value="pending">pendientes</option>
-                    <option value="completed">completadas</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={`cat_${cat.id}`}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <input
-                    type="text"
-                    placeholder="buscar..."
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 sm:w-48 px-3 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
-                  />
-                  
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-1 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    lista
+                  </button>
+                  <button
+                    onClick={() => setViewMode('calendario')}
+                    className={`px-3 py-1.5 text-xs rounded-md transition-all duration-200 ${
+                      viewMode === 'calendario' 
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
+                        : 'text-gray-500 hover:text-indigo-600'
+                    }`}
                   >
-                    <option value="fecha">fecha</option>
-                    <option value="fecha_vencimiento">límite</option>
-                    <option value="alfabetico">a-z</option>
-                  </select>
+                    calendario
+                  </button>
                 </div>
-              )}
+
+                {viewMode === 'lista' && (
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <select
+                      value={filter}
+                      onChange={(e) => setFilter(e.target.value)}
+                      className="px-3 py-1.5 text-xs border border-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white"
+                    >
+                      <option value="all">todas</option>
+                      <option value="pending">pendientes</option>
+                      <option value="completed">completadas</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={`cat_${cat.id}`}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <input
+                      type="text"
+                      placeholder="buscar..."
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="flex-1 sm:w-48 px-3 py-1.5 text-xs border border-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white"
+                    />
+                    
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="px-3 py-1.5 text-xs border border-indigo-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white"
+                    >
+                      <option value="fecha">fecha</option>
+                      <option value="fecha_vencimiento">límite</option>
+                      <option value="alfabetico">a-z</option>
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Formulario */}
@@ -307,7 +370,7 @@ function App() {
               />
             </div>
 
-            {/* Contenido: Lista o Calendario */}
+            {/* Contenido */}
             {viewMode === 'lista' ? (
               <TaskList 
                 tasks={sortedTasks} 
