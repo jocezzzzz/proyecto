@@ -8,6 +8,7 @@ import TaskCalendar from './components/calendar/TaskCalendar'
 import CategoryManager from './components/categories/CategoryManager'
 import PomodoroTimer from './components/Pomodoro/PomodoroTimer'
 import ProgressBar from './components/dashboard/ProgressBar'
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import 'react-datepicker/dist/react-datepicker.css'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
   const [frase, setFrase] = useState('')
   const [showCategories, setShowCategories] = useState(false)
   const [showPomodoro, setShowPomodoro] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Cargar categorías del usuario (sin crear por defecto)
   useEffect(() => {
@@ -158,6 +160,13 @@ function App() {
     setFrase(frasesArr[Math.floor(Math.random() * frasesArr.length)])
   }, [tasks.length])
 
+  const navigateTo = (section) => {
+    setShowCategories(section === 'categories')
+    setShowPomodoro(section === 'pomodoro')
+    setViewMode(section === 'calendar' ? 'calendario' : 'lista')
+    setMobileMenuOpen(false)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
@@ -180,81 +189,209 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      {/* Header con glassmorphism */}
-      <header className="sticky top-0 z-10 bg-white/70 backdrop-blur-md border-b border-indigo-100/50 shadow-sm">
+      {/* Header - Versión móvil y desktop */}
+      <header className="sticky top-0 z-20 bg-white/70 backdrop-blur-md border-b border-indigo-100/50 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-6">
-              {/* Logo con gradiente */}
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-md">
-                  <span className="text-white text-lg">◉</span>
-                </div>
-                <h1 className="text-sm font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  taskflow
-                </h1>
+            {/* Logo y título - siempre visible */}
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-md">
+                <span className="text-white text-lg">◉</span>
               </div>
-
-              {/* Navegación con chips */}
-              <div className="flex items-center space-x-2 text-sm">
-                <button
-                  onClick={() => {
-                    setShowCategories(false)
-                    setShowPomodoro(false)
-                  }}
-                  className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
-                    !showCategories && !showPomodoro 
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
-                      : 'text-gray-500 hover:text-indigo-600 hover:bg-white/50'
-                  }`}
-                >
-                  tareas
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCategories(true)
-                    setShowPomodoro(false)
-                  }}
-                  className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
-                    showCategories 
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
-                      : 'text-gray-500 hover:text-indigo-600 hover:bg-white/50'
-                  }`}
-                >
-                  categorías
-                </button>
-                <button
-                  onClick={() => {
-                    setShowPomodoro(!showPomodoro)
-                    setShowCategories(false)
-                  }}
-                  className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
-                    showPomodoro 
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
-                      : 'text-gray-500 hover:text-indigo-600 hover:bg-white/50'
-                  }`}
-                >
-                  🍅 pomodoro
-                </button>
-              </div>
+              <h1 className="text-sm font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                taskflow
+              </h1>
             </div>
 
-            {/* User menu */}
+            {/* Navegación desktop - visible en sm y arriba */}
+            <div className="hidden sm:flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  setShowCategories(false)
+                  setShowPomodoro(false)
+                  setViewMode('lista')
+                }}
+                className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
+                  !showCategories && !showPomodoro && viewMode === 'lista'
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
+                    : 'text-gray-500 hover:text-indigo-600 hover:bg-white/50'
+                }`}
+              >
+                tareas
+              </button>
+              <button
+                onClick={() => {
+                  setShowCategories(false)
+                  setShowPomodoro(false)
+                  setViewMode('calendario')
+                }}
+                className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
+                  viewMode === 'calendario'
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
+                    : 'text-gray-500 hover:text-indigo-600 hover:bg-white/50'
+                }`}
+              >
+                calendario
+              </button>
+              <button
+                onClick={() => {
+                  setShowCategories(true)
+                  setShowPomodoro(false)
+                }}
+                className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
+                  showCategories 
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
+                    : 'text-gray-500 hover:text-indigo-600 hover:bg-white/50'
+                }`}
+              >
+                categorías
+              </button>
+              <button
+                onClick={() => {
+                  setShowPomodoro(true)
+                  setShowCategories(false)
+                }}
+                className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
+                  showPomodoro 
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
+                    : 'text-gray-500 hover:text-indigo-600 hover:bg-white/50'
+                }`}
+              >
+                🍅 pomodoro
+              </button>
+            </div>
+
+            {/* User menu y botón hamburguesa */}
             <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 bg-white/50 px-3 py-1.5 rounded-full">
+              {/* Email - visible en desktop */}
+              <div className="hidden sm:flex items-center space-x-2 bg-white/50 px-3 py-1.5 rounded-full">
                 <span className="text-xs text-indigo-600 font-medium">{session.user.email}</span>
                 <div className="w-6 h-6 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full flex items-center justify-center text-white text-xs">
                   {session.user.email[0].toUpperCase()}
                 </div>
               </div>
+              
+              {/* Botón salir - visible en desktop */}
               <button
                 onClick={() => supabase.auth.signOut()}
-                className="text-xs text-gray-400 hover:text-indigo-600 transition-colors bg-white/50 px-3 py-1.5 rounded-full"
+                className="hidden sm:block text-xs text-gray-400 hover:text-indigo-600 transition-colors bg-white/50 px-3 py-1.5 rounded-full"
               >
                 salir
               </button>
+
+              {/* Botón hamburguesa - visible en móvil */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="sm:hidden p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+              >
+                {mobileMenuOpen ? (
+                  <XMarkIcon className="h-6 w-6" />
+                ) : (
+                  <Bars3Icon className="h-6 w-6" />
+                )}
+              </button>
             </div>
           </div>
+
+          {/* Menú móvil desplegable */}
+          {mobileMenuOpen && (
+            <div className="sm:hidden mt-4 pb-2 animate-fadeIn">
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl border border-indigo-100 shadow-lg overflow-hidden">
+                {/* Información del usuario */}
+                <div className="p-4 border-b border-indigo-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      {session.user.email[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-indigo-600 font-medium truncate">{session.user.email}</p>
+                      <p className="text-xs text-indigo-400">usuario</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Opciones de navegación */}
+                <nav className="p-2">
+                  <button
+                    onClick={() => {
+                      setShowCategories(false)
+                      setShowPomodoro(false)
+                      setViewMode('lista')
+                      setMobileMenuOpen(false)
+                    }}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3 ${
+                      !showCategories && !showPomodoro && viewMode === 'lista'
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white' 
+                        : 'text-gray-600 hover:bg-indigo-50'
+                    }`}
+                  >
+                    <span className="text-lg">📋</span>
+                    <span className="text-sm font-medium">tareas</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowCategories(false)
+                      setShowPomodoro(false)
+                      setViewMode('calendario')
+                      setMobileMenuOpen(false)
+                    }}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3 ${
+                      viewMode === 'calendario'
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white' 
+                        : 'text-gray-600 hover:bg-indigo-50'
+                    }`}
+                  >
+                    <span className="text-lg">📅</span>
+                    <span className="text-sm font-medium">calendario</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowCategories(true)
+                      setShowPomodoro(false)
+                      setMobileMenuOpen(false)
+                    }}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3 ${
+                      showCategories 
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white' 
+                        : 'text-gray-600 hover:bg-indigo-50'
+                    }`}
+                  >
+                    <span className="text-lg">🏷️</span>
+                    <span className="text-sm font-medium">categorías</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowPomodoro(true)
+                      setShowCategories(false)
+                      setMobileMenuOpen(false)
+                    }}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center gap-3 ${
+                      showPomodoro 
+                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white' 
+                        : 'text-gray-600 hover:bg-indigo-50'
+                    }`}
+                  >
+                    <span className="text-lg">🍅</span>
+                    <span className="text-sm font-medium">pomodoro</span>
+                  </button>
+                </nav>
+
+                {/* Botón salir en móvil */}
+                <div className="p-2 border-t border-indigo-100">
+                  <button
+                    onClick={() => supabase.auth.signOut()}
+                    className="w-full text-left px-4 py-3 rounded-lg text-gray-600 hover:bg-rose-50 transition-colors flex items-center gap-3"
+                  >
+                    <span className="text-lg">🚪</span>
+                    <span className="text-sm font-medium">salir</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -286,8 +423,8 @@ function App() {
               <ProgressBar tasks={tasks} />
             </div>
 
-            {/* Botón pomodoro con estilo */}
-            <div className="mb-4">
+            {/* Botón pomodoro con estilo - visible solo en desktop */}
+            <div className="hidden sm:block mb-4">
               <button
                 onClick={() => setShowPomodoro(true)}
                 className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl text-sm font-medium hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
@@ -390,6 +527,23 @@ function App() {
           </>
         )}
       </main>
+
+      {/* Agregar estilos para animación */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   )
 }
